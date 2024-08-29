@@ -1,8 +1,65 @@
-from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 
-User = get_user_model()
+
+class User(AbstractUser):
+    REGEX_SIGNS = RegexValidator(r'^[\w.@+-]+\Z')
+
+    NAME_MAX_LENGTH = 150
+    EMAIL_MAX_LENGTH = 256
+    ROLE_MAX_LENGTH = 64
+
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+
+    ROLE_CHOICES = [
+        (USER, USER),
+        (ADMIN, ADMIN),
+        (MODERATOR, MODERATOR),
+    ]
+
+    username = models.CharField(
+        unique=True,
+        max_length=NAME_MAX_LENGTH,
+        validators=(REGEX_SIGNS,),
+        verbose_name='Никнейм пользователя',
+    )
+    email = models.EmailField(
+        unique=True,
+        max_length=EMAIL_MAX_LENGTH,
+        verbose_name='E-mail пользователя',
+    )
+    first_name = models.CharField(
+        blank=True,
+        max_length=NAME_MAX_LENGTH,
+        verbose_name='Имя пользователя',
+    )
+    last_name = models.CharField(
+        blank=True,
+        max_length=NAME_MAX_LENGTH,
+        verbose_name='Фамилия пользователя',
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name='Биография пользователя',
+    )
+    role = models.CharField(
+        choices=ROLE_CHOICES,
+        default=USER,
+        blank=True,
+        max_length=ROLE_MAX_LENGTH,
+        verbose_name='Роль пользователя',
+    )
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return self.username
 
 
 class Genre(models.Model):
