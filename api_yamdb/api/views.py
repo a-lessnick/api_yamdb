@@ -1,16 +1,19 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import User
+from reviews.models import User, Comment, Review
 
-from serializers import GetTokenSerializer, SignUpSerializer
+from .serializers import (
+    GetTokenSerializer, SignUpSerializer,
+    ReviewSerializer, CommentSerializer
+)
 
 
 class AuthViewSet(viewsets.GenericViewSet):
@@ -63,3 +66,29 @@ class AuthViewSet(viewsets.GenericViewSet):
         confirmation_code = default_token_generator.make_token(user[0])
         AuthViewSet.send_mail_confirmation_code(user[0], confirmation_code)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly)
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        return Review.objects.filter(title_id=title_id)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user,
+                        title_id=self.kwargs.get('title_id'))
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        return Comment.objects.filter(review_id=review_id)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user,
+                        review_id=self.kwargs.get('review_id'))
