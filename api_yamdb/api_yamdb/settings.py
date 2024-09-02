@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'reviews',
     'api',
     'rest_framework_simplejwt',
+    'django_filters'
 ]
 
 MIDDLEWARE = [
@@ -120,6 +121,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
 
 TEXT_FIELD_LENGTH = 256
 SLUG_FIELD_LENGTH = 50

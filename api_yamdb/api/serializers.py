@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+
 from reviews.models import User, Category, Comment, Genre, Review, Title
 
 
@@ -23,7 +24,8 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email')
 
-
+        
+        
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор жанров произведений."""
 

@@ -2,20 +2,22 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets, status
+from rest_framework import filters, mixins, viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+
 from .filters import TitleFilter
 from .permissions import IsAdminOrReadOnly
-from reviews.models import User, Category, Title, Genre
+from reviews.models import User, Category, Title, Genre, Comment, Review
 from .serializers import (
     GetTokenSerializer, SignUpSerializer,
     TitleReadSerializer, TitleWriteSerializer,
-    GenreSerializer, CategorySerializer
+    GenreSerializer, CategorySerializer,
+    ReviewSerializer, CommentSerializer,
 )
 
 
@@ -71,6 +73,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
 class CreateListDestroyViewset(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -117,4 +120,30 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TitleReadSerializer
         return TitleWriteSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly)
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        return Review.objects.filter(title_id=title_id)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user,
+                        title_id=self.kwargs.get('title_id'))
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        return Comment.objects.filter(review_id=review_id)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user,
+                        review_id=self.kwargs.get('review_id'))
 
