@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 
+from api_yamdb.settings import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
+
 
 class User(AbstractUser):
     REGEX_SIGNS = RegexValidator(r'^[\w.@+-]+\Z')
@@ -63,8 +65,10 @@ class User(AbstractUser):
 
 
 class Genre(models.Model):
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('Слаг', unique=True, max_length=50)
+    name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
+    slug = models.SlugField(
+        'Слаг жанра', unique=True, max_length=SLUG_FIELD_LENGTH
+    )
 
     class Meta:
         ordering = ('name',)
@@ -76,8 +80,10 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('Слаг', unique=True, max_length=50)
+    name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
+    slug = models.SlugField(
+        'Слаг категории', unique=True, max_length=SLUG_FIELD_LENGTH
+    )
 
     class Meta:
         ordering = ('name',)
@@ -89,7 +95,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField('Название', max_length=256)
+    name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
     year = models.IntegerField('Год выхода')
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(

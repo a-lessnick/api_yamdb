@@ -120,3 +120,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+TEXT_FIELD_LENGTH = 256
+SLUG_FIELD_LENGTH = 50
