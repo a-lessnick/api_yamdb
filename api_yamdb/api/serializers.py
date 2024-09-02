@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from reviews.models import User, Category, Genre, Title
+from reviews.models import User, Category, Comment, Genre, Review, Title
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -70,3 +70,33 @@ class TitleReadSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('genre', 'rating')
 
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.method == 'POST':
+            author = request.user
+            title_id = self.context.get('view').kwargs.get('title_id')
+            if Review.objects.filter(author=author, title_id=title_id).exists():
+                raise serializers.ValidationError('Нельзя оставить два отзыва')
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
