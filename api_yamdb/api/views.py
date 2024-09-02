@@ -1,18 +1,23 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-
-from rest_framework import status, viewsets, permissions
+from django.db.models import Avg
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import User, Comment, Review
 
+from .filters import TitleFilter
+from .permissions import IsAdminOrReadOnly
+from reviews.models import User, Category, Title, Genre, Comment, Review
 from .serializers import (
     GetTokenSerializer, SignUpSerializer,
-    ReviewSerializer, CommentSerializer
+    TitleReadSerializer, TitleWriteSerializer,
+    GenreSerializer, CategorySerializer,
+    ReviewSerializer, CommentSerializer,
 )
 
 
@@ -68,6 +73,55 @@ class AuthViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
+class CreateListDestroyViewset(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Вьюсет класс для создания и удаления."""
+
+    serializer_class = None
+    permission_classes = (IsAdminOrReadOnly,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+
+
+class CategoryViewSet(CreateListDestroyViewset):
+    """Вьюсет для создания объектов класса Category."""
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(CreateListDestroyViewset):
+    """Вьюсет для создания объектов класса Genre."""
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для создания объектов класса Title."""
+
+    queryset = (
+        Title.objects.all().annotate(Avg('reviews__score')).order_by('name')
+    )
+    serializer_class = TitleWriteSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        """Определяет какой сериализатор будет использоваться
+        для разных типов запроса."""
+        if self.request.method == 'GET':
+            return TitleReadSerializer
+        return TitleWriteSerializer
+
+
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly)
@@ -92,3 +146,4 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
                         review_id=self.kwargs.get('review_id'))
+

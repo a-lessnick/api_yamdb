@@ -122,6 +122,10 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+
+TEXT_FIELD_LENGTH = 256
+SLUG_FIELD_LENGTH = 50
+
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
