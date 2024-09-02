@@ -123,3 +123,7 @@ SIMPLE_JWT = {
 
 TEXT_FIELD_LENGTH = 256
 SLUG_FIELD_LENGTH = 50
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'

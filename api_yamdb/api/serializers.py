@@ -6,7 +6,7 @@ from reviews.models import User, Category, Comment, Genre, Review, Title
 class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
-        validators=(User.REGEX_SIGNS,)
+        validators=[User.REGEX_SIGNS]
     )
     confirmation_code = serializers.CharField(required=True)
 
