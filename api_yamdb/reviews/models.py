@@ -10,7 +10,7 @@ class User(AbstractUser):
     REGEX_SIGNS = RegexValidator(r'^[\w.@+-]+\Z')
     REGEX_ME = RegexValidator(r'[^m][^e]')
     NAME_MAX_LENGTH = 150
-    EMAIL_MAX_LENGTH = 256
+    EMAIL_MAX_LENGTH = 254
     ROLE_MAX_LENGTH = 64
 
     USER = 'user'
