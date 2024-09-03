@@ -5,14 +5,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-
+from reviews.models import User, Category, Title, Genre, Comment, Review
 from .filters import TitleFilter
 from .permissions import IsAdminOrReadOnly, IsAdminModeratorAuthorOrReadOnly
-from reviews.models import User, Category, Title, Genre, Comment, Review
 from .serializers import (
     GetTokenSerializer, SignUpSerializer,
     TitleReadSerializer, TitleWriteSerializer,
@@ -83,6 +83,7 @@ class CreateListDestroyViewset(
 
     serializer_class = None
     permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
     search_fields = ('name',)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
@@ -110,6 +111,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     )
     serializer_class = TitleWriteSerializer
     permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
@@ -119,6 +121,25 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TitleReadSerializer
         return TitleWriteSerializer
+
+    def update(self, request, *args, **kwargs):
+        """Обновление произведения."""
+        from rest_framework import exceptions
+        raise exceptions.MethodNotAllowed(request.method)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Частичное обновление произведения."""
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
