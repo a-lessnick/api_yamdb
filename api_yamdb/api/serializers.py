@@ -24,8 +24,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email')
 
-        
-        
+
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор жанров произведений."""
 
@@ -74,6 +73,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов о произведениях."""
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -84,16 +85,23 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
+        """Проверяет уникальность отзыва пользователя на одно произведение."""
         request = self.context.get('request')
         if request.method == 'POST':
             author = request.user
             title_id = self.context.get('view').kwargs.get('title_id')
-            if Review.objects.filter(author=author, title_id=title_id).exists():
-                raise serializers.ValidationError('Нельзя оставить два отзыва')
+            if Review.objects.filter(
+                author=author, title_id=title_id
+            ).exists():
+                raise serializers.ValidationError(
+                    'Нельзя оставить два отзыва на одно произведение.'
+                )
         return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев к отзывам."""
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,

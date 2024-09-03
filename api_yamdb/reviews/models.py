@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
+from django.db.models import Avg
 
 from api_yamdb.settings import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
 
@@ -117,6 +118,11 @@ class Title(models.Model):
     )
     rating = models.IntegerField('Рейтинг', default=None, null=True)
 
+    def update_rating(self):
+        rating = self.reviews.aggregate(Avg('score'))['score__avg']
+        self.rating = rating
+        self.save()
+
     class Meta:
         ordering = ('name',)
         verbose_name = 'Произведение'
@@ -172,6 +178,10 @@ class Review(models.Model):
         verbose_name='Дата публикации',
         db_index=True,
     )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.title.update_rating()
 
     class Meta:
         verbose_name = 'Отзыв'
