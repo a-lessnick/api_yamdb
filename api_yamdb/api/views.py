@@ -6,20 +6,49 @@ from rest_framework import filters, mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import User, Category, Title, Genre, Comment, Review
 from .filters import TitleFilter
-from .permissions import IsAdminOrReadOnly, IsAdminModeratorAuthorOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAdminModeratorAuthorOrReadOnly, AdminOnly
 from .serializers import (
     GetTokenSerializer, SignUpSerializer,
     TitleReadSerializer, TitleWriteSerializer,
     GenreSerializer, CategorySerializer,
     ReviewSerializer, CommentSerializer,
+    UsersSerializer, NotAdminSerializer
 )
 
+
+class UsersViewSet(viewsets.ModelViewSet):
+    """Вьюсет для модели Пользователя."""
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
+    permission_classes = (AdminOnly,)
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+        url_path='me')
+    def get_current_user_info(self, request):
+        serializer = UsersSerializer(request.user)
+        if request.method == 'GET':
+            return Response(serializer.data)
+        serializer = NotAdminSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=request.user.role)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=['POST'], detail=False, url_path='token')
