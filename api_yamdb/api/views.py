@@ -50,6 +50,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         serializer.save(role=request.user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=['POST'], detail=False, url_path='token')
     def get_token(self, request):
@@ -174,6 +175,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для управления отзывами."""
 
+    http_method_names = ('get', 'post', 'patch', 'delete')
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly,)
     queryset = Review.objects.all()
@@ -205,6 +207,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для управления комментариями к отзывам."""
 
+    http_method_names = ('get', 'post', 'patch', 'delete')
     serializer_class = CommentSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly,)
     queryset = Comment.objects.all()
