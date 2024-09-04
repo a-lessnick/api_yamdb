@@ -7,8 +7,8 @@ from api_yamdb.settings import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
 
 
 class User(AbstractUser):
-    REGEX_SIGNS = RegexValidator(r'^[\w.@+-]+\Z')
-    REGEX_ME = RegexValidator(r'[^m][^e]')
+    REGEX_SIGNS = r'^[\w.@+-]+\Z'
+    REGEX_ME = r'[^m][^e]'
     NAME_MAX_LENGTH = 150
     EMAIL_MAX_LENGTH = 254
     ROLE_MAX_LENGTH = 64
@@ -26,7 +26,7 @@ class User(AbstractUser):
     username = models.CharField(
         unique=True,
         max_length=NAME_MAX_LENGTH,
-        validators=(REGEX_SIGNS, REGEX_ME),
+        validators=(RegexValidator(REGEX_SIGNS), RegexValidator(REGEX_ME)),
         verbose_name='Никнейм пользователя',
     )
     email = models.EmailField(
