@@ -55,7 +55,7 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=['POST'], detail=False, url_path='token')
     def get_token(self, request):
         serializer = GetTokenSerializer(data=request.data)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         user = get_object_or_404(User, username=data['username'])
         if default_token_generator.check_token(
