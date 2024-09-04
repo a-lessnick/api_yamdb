@@ -1,22 +1,45 @@
 from rest_framework import serializers
-from django.core.exceptions import ValidationError
 
 from reviews.models import User, Category, Comment, Genre, Review, Title
 
 
-class GetTokenSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        required=True,
-        validators=[User.REGEX_SIGNS]
-    )
-    confirmation_code = serializers.CharField(required=True)
-
+class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'username',
-            'confirmation_code'
-        )
+        fields = ('username', 'email')
+
+    def validate_username(self, username):
+        if username in 'me':
+            raise serializers.ValidationError(
+                '"me" запрещено использовать!'
+            )
+        return username
+
+
+class UserReceiveTokenSerializer(serializers.Serializer):
+    username = serializers.RegexField(
+        regex=User.REGEX_SIGNS,
+        max_length=User.NAME_MAX_LENGTH,
+        required=True
+    )
+    confirmation_code = serializers.CharField(
+        max_length=User.NAME_MAX_LENGTH,
+        required=True
+    )
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role')
+
+    def validate_username(self, username):
+        if username in 'me':
+            raise serializers.ValidationError(
+                '"me" запрещено использовать!'
+            )
+        return username
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -38,26 +61,6 @@ class NotAdminSerializer(serializers.ModelSerializer):
             'last_name', 'bio', 'role'
         )
         read_only_fields = ('role',)
-
-
-class SignUpSerializer(serializers.ModelSerializer):
-
-    def validate(self, user_data):
-        email = user_data.get('email')
-        username = user_data.get('username')
-
-        if User.objects.filter(email=email).exists():
-            if User.objects.filter(username=username).exists():
-                return user_data
-            raise ValidationError(f'Email {email} уже существует')
-
-        if User.objects.filter(username=username).exists():
-            raise ValidationError(f'Username {username} уже существует')
-        return user_data
-
-    class Meta:
-        model = User
-        fields = ('username', 'email')
 
 
 class GenreSerializer(serializers.ModelSerializer):
