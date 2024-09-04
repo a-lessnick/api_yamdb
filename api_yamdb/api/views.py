@@ -219,5 +219,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Создаёт новый комментарий и устанавливает автора."""
-        serializer.save(author=self.request.user,
-                        review_id=self.kwargs.get('review_id'))
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, id=review_id)
+        serializer.save(author=self.request.user, review=review)
