@@ -24,7 +24,7 @@ from .serializers import (
 class UsersViewSet(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
                    viewsets.GenericViewSet):
-
+    """Вьюсет для модели User"""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AdminOnly,)
@@ -65,7 +65,7 @@ class UsersViewSet(mixins.ListModelMixin,
 
 class UserCreateViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
-
+    """Вьюсет для создания пользователей."""
     permission_classes = (AllowAny,)
 
     @staticmethod
@@ -113,6 +113,7 @@ class UserCreateViewSet(mixins.CreateModelMixin,
 
 class UserReceiveTokenViewSet(mixins.CreateModelMixin,
                               viewsets.GenericViewSet):
+    """Вьюсет для получения токена."""
     queryset = User.objects.all()
     serializer_class = UserReceiveTokenSerializer
     permission_classes = (AllowAny,)
