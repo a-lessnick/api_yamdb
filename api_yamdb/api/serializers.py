@@ -5,8 +5,8 @@ from reviews.models import User, Category, Comment, Genre, Review, Title
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор создания пользователя."""
-
+    """Сериализатор для создания пользователя."""
+    
     class Meta:
         model = User
         fields = ('username', 'email')
@@ -20,7 +20,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserReceiveTokenSerializer(serializers.Serializer):
-    """Сериализатор получения токена."""
+    """Сериализатор для получения токена."""
 
     username = serializers.RegexField(
         regex=User.REGEX_SIGNS,
@@ -34,7 +34,8 @@ class UserReceiveTokenSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор пользователя."""
+    """Сериализатор для пользователя."""
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
@@ -46,16 +47,6 @@ class UserSerializer(serializers.ModelSerializer):
                 '"me" запрещено использовать!'
             )
         return username
-
-
-class UsersSerializer(serializers.ModelSerializer):
-    """Сериализатор для пользователя."""
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role'
-        )
 
 
 class NotAdminSerializer(serializers.ModelSerializer):

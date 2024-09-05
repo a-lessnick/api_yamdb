@@ -3,8 +3,7 @@ from rest_framework import permissions
 
 
 class AdminOnly(permissions.BasePermission):
-    """Только для администраторов."""
-
+    """Доступ только для админа."""
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
@@ -13,12 +12,8 @@ class AdminOnly(permissions.BasePermission):
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
-    """
-    Методы записи только для администраторов, суперюзера и
-    зарегистрированных пользователей.
-    Для остальных - только безопасные методы.
-    """
-
+    """Админ или только чтение."""
+    
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
@@ -29,12 +24,8 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 
 class IsAdminModeratorAuthorOrReadOnly(permissions.BasePermission):
-    """
-    Методы записи только для администраторов, модераторов и
-    авторов.
-    Для остальных - только безопасные методы.
-    """
-
+    """Доступ только для админа/модератора/автора"""
+    
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
