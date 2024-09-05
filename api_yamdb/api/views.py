@@ -1,3 +1,4 @@
+"""Вьюсеты для API."""
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -12,6 +13,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import User, Category, Title, Genre, Comment, Review
 from .filters import TitleFilter
+from .mixins import CreateListDestroyViewSet
 from .permissions import IsAdminOrReadOnly, IsAdminModeratorAuthorOrReadOnly, AdminOnly
 from .serializers import (
     TitleReadSerializer, TitleWriteSerializer,
@@ -24,6 +26,7 @@ from .serializers import (
 class UsersViewSet(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
                    viewsets.GenericViewSet):
+    """Вьюсет получения списка пользователей."""
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -65,6 +68,7 @@ class UsersViewSet(mixins.ListModelMixin,
 
 class UserCreateViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
+    """Вьюсет создания пользователя."""
 
     permission_classes = (AllowAny,)
 
@@ -113,6 +117,8 @@ class UserCreateViewSet(mixins.CreateModelMixin,
 
 class UserReceiveTokenViewSet(mixins.CreateModelMixin,
                               viewsets.GenericViewSet):
+    """Вьюсет получения токена."""
+
     queryset = User.objects.all()
     serializer_class = UserReceiveTokenSerializer
     permission_classes = (AllowAny,)
@@ -134,30 +140,14 @@ class UserReceiveTokenViewSet(mixins.CreateModelMixin,
         )
 
 
-class CreateListDestroyViewset(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
-    """Вьюсет класс для создания и удаления."""
-
-    serializer_class = None
-    permission_classes = (IsAdminOrReadOnly,)
-    pagination_class = PageNumberPagination
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-
-
-class CategoryViewSet(CreateListDestroyViewset):
+class CategoryViewSet(CreateListDestroyViewSet):
     """Вьюсет для создания объектов класса Category."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewSet(CreateListDestroyViewset):
+class GenreViewSet(CreateListDestroyViewSet):
     """Вьюсет для создания объектов класса Genre."""
 
     queryset = Genre.objects.all()
