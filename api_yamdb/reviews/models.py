@@ -1,5 +1,8 @@
+"""Модели приложения reviews."""
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.core.validators import (
+    MaxValueValidator, MinValueValidator, RegexValidator
+)
 from django.db import models
 from django.db.models import Avg
 
@@ -7,6 +10,8 @@ from api_yamdb.settings import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
 
 
 class User(AbstractUser):
+    """Модель пользователя."""
+
     REGEX_SIGNS = r'^[\w.@+-]+\Z'
     REGEX_ME = r'[^m][^e]'
     NAME_MAX_LENGTH = 150
@@ -74,6 +79,8 @@ class User(AbstractUser):
 
 
 class Genre(models.Model):
+    """Жанры произведений."""
+
     name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
     slug = models.SlugField(
         'Слаг жанра', unique=True, max_length=SLUG_FIELD_LENGTH
@@ -89,6 +96,8 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
+    """Категории произведений."""
+
     name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
     slug = models.SlugField(
         'Слаг категории', unique=True, max_length=SLUG_FIELD_LENGTH
@@ -104,6 +113,8 @@ class Category(models.Model):
 
 
 class Title(models.Model):
+    """Произведения."""
+
     name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
     year = models.IntegerField('Год выхода')
     description = models.TextField('Описание', blank=True, null=True)
@@ -133,6 +144,8 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
+    """Соответствие произведений и жанров."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
