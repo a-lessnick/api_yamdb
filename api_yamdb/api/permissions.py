@@ -1,3 +1,4 @@
+"""Классы для описания прав доступа."""
 from rest_framework import permissions
 
 
@@ -12,6 +13,7 @@ class AdminOnly(permissions.BasePermission):
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     """Админ или только чтение."""
+    
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
@@ -23,6 +25,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 class IsAdminModeratorAuthorOrReadOnly(permissions.BasePermission):
     """Доступ только для админа/модератора/автора"""
+    
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS

@@ -1,3 +1,4 @@
+"""Сериализаторы."""
 from rest_framework import serializers
 
 from reviews.models import User, Category, Comment, Genre, Review, Title
@@ -5,6 +6,7 @@ from reviews.models import User, Category, Comment, Genre, Review, Title
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя."""
+    
     class Meta:
         model = User
         fields = ('username', 'email')
@@ -19,6 +21,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 class UserReceiveTokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена."""
+
     username = serializers.RegexField(
         regex=User.REGEX_SIGNS,
         max_length=User.NAME_MAX_LENGTH,
@@ -32,6 +35,7 @@ class UserReceiveTokenSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
