@@ -14,7 +14,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import User, Category, Title, Genre, Comment, Review
 from .filters import TitleFilter
 from .mixins import CreateListDestroyViewSet
-from .permissions import IsAdminOrReadOnly, IsAdminModeratorAuthorOrReadOnly, AdminOnly
+from .permissions import (
+    IsAdminOrReadOnly, IsAdminModeratorAuthorOrReadOnly, AdminOnly
+)
 from .serializers import (
     TitleReadSerializer, TitleWriteSerializer,
     GenreSerializer, CategorySerializer,

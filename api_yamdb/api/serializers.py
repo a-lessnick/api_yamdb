@@ -6,7 +6,7 @@ from reviews.models import User, Category, Comment, Genre, Review, Title
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя."""
-    
+
     class Meta:
         model = User
         fields = ('username', 'email')
