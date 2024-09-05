@@ -153,6 +153,8 @@ class TitleGenre(models.Model):
 
 
 class Review(models.Model):
+    """Модель отзыва на произведение."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -180,6 +182,7 @@ class Review(models.Model):
     )
 
     def save(self, *args, **kwargs):
+        """Сохраняет отзыв и обновляет рейтинг после его публикации."""
         super().save(*args, **kwargs)
         self.title.update_rating()
 
@@ -199,6 +202,8 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Модель комментария к отзыву."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
