@@ -1,13 +1,21 @@
+"""Модели приложения reviews."""
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.core.validators import (
+    MaxValueValidator, MinValueValidator, RegexValidator
+)
 from django.db import models
+from django.db.models import Avg
+
+from api_yamdb.settings import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
 
 
 class User(AbstractUser):
-    REGEX_SIGNS = RegexValidator(r'^[\w.@+-]+\Z')
+    """Модель пользователя."""
 
+    REGEX_SIGNS = r'^[\w.@+-]+\Z'
+    REGEX_ME = r'[^m][^e]'
     NAME_MAX_LENGTH = 150
-    EMAIL_MAX_LENGTH = 256
+    EMAIL_MAX_LENGTH = 254
     ROLE_MAX_LENGTH = 64
 
     USER = 'user'
@@ -23,7 +31,7 @@ class User(AbstractUser):
     username = models.CharField(
         unique=True,
         max_length=NAME_MAX_LENGTH,
-        validators=(REGEX_SIGNS,),
+        validators=(RegexValidator(REGEX_SIGNS), RegexValidator(REGEX_ME)),
         verbose_name='Никнейм пользователя',
     )
     email = models.EmailField(
@@ -53,6 +61,14 @@ class User(AbstractUser):
         verbose_name='Роль пользователя',
     )
 
+    @property
+    def is_admin(self):
+        return self.role == User.ADMIN or self.is_staff or self.is_superuser
+
+    @property
+    def is_moderator(self):
+        return self.role == User.MODERATOR
+
     class Meta:
         ordering = ('id',)
         verbose_name = 'Пользователь'
@@ -63,8 +79,12 @@ class User(AbstractUser):
 
 
 class Genre(models.Model):
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('Слаг', unique=True, max_length=50)
+    """Жанры произведений."""
+
+    name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
+    slug = models.SlugField(
+        'Слаг жанра', unique=True, max_length=SLUG_FIELD_LENGTH
+    )
 
     class Meta:
         ordering = ('name',)
@@ -76,8 +96,12 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('Слаг', unique=True, max_length=50)
+    """Категории произведений."""
+
+    name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
+    slug = models.SlugField(
+        'Слаг категории', unique=True, max_length=SLUG_FIELD_LENGTH
+    )
 
     class Meta:
         ordering = ('name',)
@@ -89,7 +113,9 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField('Название', max_length=256)
+    """Произведения."""
+
+    name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
     year = models.IntegerField('Год выхода')
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
@@ -103,6 +129,11 @@ class Title(models.Model):
     )
     rating = models.IntegerField('Рейтинг', default=None, null=True)
 
+    def update_rating(self):
+        rating = self.reviews.aggregate(Avg('score'))['score__avg']
+        self.rating = rating
+        self.save()
+
     class Meta:
         ordering = ('name',)
         verbose_name = 'Произведение'
@@ -113,6 +144,8 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
+    """Соответствие произведений и жанров."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -133,6 +166,8 @@ class TitleGenre(models.Model):
 
 
 class Review(models.Model):
+    """Модель отзыва на произведение."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -159,6 +194,11 @@ class Review(models.Model):
         db_index=True,
     )
 
+    def save(self, *args, **kwargs):
+        """Сохраняет отзыв и обновляет рейтинг после его публикации."""
+        super().save(*args, **kwargs)
+        self.title.update_rating()
+
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
@@ -175,6 +215,8 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Модель комментария к отзыву."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
