@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import User, Category, Title, Genre, Comment, Review
+from api_yamdb import settings
 from .filters import TitleFilter
 from .mixins import CreateListDestroyViewSet
 from .permissions import (
@@ -21,7 +22,7 @@ from .serializers import (
     TitleReadSerializer, TitleWriteSerializer,
     GenreSerializer, CategorySerializer,
     ReviewSerializer, CommentSerializer,
-    UserSerializer, UserCreateSerializer, UserReceiveTokenSerializer
+    UserSerializer, UserSignUpSerializer, UserReceiveTokenSerializer
 )
 
 
@@ -35,6 +36,8 @@ class UsersViewSet(mixins.ListModelMixin,
     permission_classes = (AdminOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    lookup_field = 'username'
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
 
     @action(detail=False, methods=['GET', 'PATCH', 'DELETE'],
             url_path=r'(?P<username>[\w.@+-]+)',
@@ -83,13 +86,29 @@ class UserCreateViewSet(mixins.CreateModelMixin,
                 f'код подтверждения для доступа к API: {confirmation_code}'
             ),
             recipient_list=(email,),
-            from_email='practicum@yandex.com',
+            from_email=settings.EMAIL_SENDER,
             fail_silently=True,
         )
 
     def create(self, request):
+        # serializer = UserSignUpSerializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
         username = request.data.get('username')
         email = request.data.get('email')
+
+        # try:
+        #     user, _ = User.objects.get_or_create(
+        #         username=username, email=email
+        #     )
+        # except IntegrityError:
+        #     raise ValidationError()
+        #
+        # self.send_confirmation_code(
+        #     user.email,
+        #     username,
+        #     default_token_generator.make_token(user)
+        # )
+
         if User.objects.filter(username=username, email=email).exists():
             user = User.objects.get(username=username, email=email)
             self.send_confirmation_code(
@@ -97,13 +116,13 @@ class UserCreateViewSet(mixins.CreateModelMixin,
                 username,
                 default_token_generator.make_token(user)
             )
-            serializer = UserCreateSerializer(data=request.data)
+            serializer = UserSignUpSerializer(data=request.data)
             serializer.is_valid()
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
             )
-        serializer = UserCreateSerializer(data=request.data)
+        serializer = UserSignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = User.objects.create(**serializer.validated_data)
         self.send_confirmation_code(
