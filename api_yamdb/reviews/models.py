@@ -210,7 +210,7 @@ class Review(models.Model):
         ]
         ordering = ('pub_date',)
 
-    def str(self):
+    def __str__(self):
         return self.text
 
 
@@ -239,5 +239,5 @@ class Comment(models.Model):
     class Meta:
         ordering = ('-pub_date',)
 
-    def str(self):
+    def __str__(self):
         return self.author
