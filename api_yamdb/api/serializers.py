@@ -2,6 +2,7 @@
 from rest_framework import serializers
 
 from reviews.models import User, Category, Comment, Genre, Review, Title
+from reviews.constants import USERNAME_REGEX_SIGNS, NAME_MAX_LENGTH
 
 
 class UserSignUpSerializer(serializers.ModelSerializer):
@@ -23,12 +24,12 @@ class UserReceiveTokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена."""
 
     username = serializers.RegexField(
-        regex=User.REGEX_SIGNS,
-        max_length=User.NAME_MAX_LENGTH,
+        regex=USERNAME_REGEX_SIGNS,
+        max_length=NAME_MAX_LENGTH,
         required=True
     )
     confirmation_code = serializers.CharField(
-        max_length=User.NAME_MAX_LENGTH,
+        max_length=NAME_MAX_LENGTH,
         required=True
     )
 

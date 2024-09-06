@@ -8,18 +8,15 @@ from django.db.models import Avg
 
 from .constants import (
     TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH,
-    SCORE_MIN_VALUE, SCORE_MAX_VALUE
+    SCORE_MIN_VALUE, SCORE_MAX_VALUE,
+    NAME_MAX_LENGTH, EMAIL_MAX_LENGTH,
+    ROLE_MAX_LENGTH,
 )
+from .validators import validate_username
 
 
 class User(AbstractUser):
     """Модель пользователя."""
-
-    REGEX_SIGNS = r'^[\w.@+-]+\Z'
-    REGEX_ME = r'[^m][^e]'
-    NAME_MAX_LENGTH = 150
-    EMAIL_MAX_LENGTH = 254
-    ROLE_MAX_LENGTH = 64
 
     USER = 'user'
     ADMIN = 'admin'
@@ -34,7 +31,7 @@ class User(AbstractUser):
     username = models.CharField(
         unique=True,
         max_length=NAME_MAX_LENGTH,
-        validators=(RegexValidator(REGEX_SIGNS), RegexValidator(REGEX_ME)),
+        validators=(validate_username,),
         verbose_name='Никнейм пользователя',
     )
     email = models.EmailField(
