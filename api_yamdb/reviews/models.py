@@ -6,7 +6,7 @@ from django.core.validators import (
 from django.db import models
 from django.db.models import Avg
 
-from api_yamdb.settings import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
+from .constants import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
 
 
 class User(AbstractUser):
