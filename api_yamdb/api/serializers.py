@@ -4,7 +4,7 @@ from rest_framework import serializers
 from reviews.models import User, Category, Comment, Genre, Review, Title
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserSignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя."""
 
     class Meta:
@@ -12,7 +12,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = ('username', 'email')
 
     def validate_username(self, username):
-        if username in 'me':
+        if username == 'me':
             raise serializers.ValidationError(
                 '"me" запрещено использовать!'
             )
@@ -33,20 +33,13 @@ class UserReceiveTokenSerializer(serializers.Serializer):
     )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(UserSignUpSerializer):
     """Сериализатор для пользователя."""
 
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
-
-    def validate_username(self, username):
-        if username in 'me':
-            raise serializers.ValidationError(
-                '"me" запрещено использовать!'
-            )
-        return username
 
 
 class NotAdminSerializer(serializers.ModelSerializer):
