@@ -11,7 +11,7 @@ from .views import (ReviewViewSet, CommentViewSet,
 auth_urls = [
     path(
         'signup/',
-        UserCreateViewSet.as_view({'post': 'create'}),
+        UserCreateViewSet.as_view(),
         name='signup'
     ),
     path(

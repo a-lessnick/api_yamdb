@@ -3,13 +3,19 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets, status
+from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.filters import SearchFilter
+from rest_framework.views import APIView
+
+from rest_framework.exceptions import ValidationError
+from django.db import IntegrityError
 
 from reviews.models import User, Category, Title, Genre, Comment, Review
 from api_yamdb import settings
@@ -26,38 +32,22 @@ from .serializers import (
 )
 
 
-class UsersViewSet(mixins.ListModelMixin,
-                   mixins.CreateModelMixin,
-                   viewsets.GenericViewSet):
-    """Вьюсет для модели User"""
+class UsersViewSet(ModelViewSet):
+    """Представление для операций с пользователями."""
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AdminOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)
+    filter_backends = (SearchFilter,)
     lookup_field = 'username'
+    search_fields = ('username',)
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
 
-    @action(detail=False, methods=['GET', 'PATCH', 'DELETE'],
-            url_path=r'(?P<username>[\w.@+-]+)',
-            )
-    def get_user_by_username(self, request, username):
-        user = get_object_or_404(User, username=username)
-        if request.method == 'PATCH':
-            serializer = UserSerializer(user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'DELETE':
-            user.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['GET', 'PATCH'],
-            url_path='me', permission_classes=(IsAuthenticated,)
-            )
+    @action(
+        detail=False, methods=['GET', 'PATCH'],
+        url_path='me',
+        permission_classes=(IsAuthenticated,)
+    )
     def get_me_data(self, request):
         if request.method == 'PATCH':
             serializer = UserSerializer(
@@ -71,8 +61,7 @@ class UsersViewSet(mixins.ListModelMixin,
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserCreateViewSet(mixins.CreateModelMixin,
-                        viewsets.GenericViewSet):
+class UserCreateViewSet(APIView):
     """Вьюсет для создания пользователей."""
 
     permission_classes = (AllowAny,)
@@ -90,50 +79,50 @@ class UserCreateViewSet(mixins.CreateModelMixin,
             fail_silently=True,
         )
 
-    def create(self, request):
-        # serializer = UserSignUpSerializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
+    def post(self, request):
+        serializer = UserSignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         username = request.data.get('username')
         email = request.data.get('email')
 
-        # try:
-        #     user, _ = User.objects.get_or_create(
-        #         username=username, email=email
+        user, _ = User.objects.get_or_create(
+            username=username,
+            email=email
+        )
+
+        self.send_confirmation_code(
+            user.email,
+            username,
+            default_token_generator.make_token(user)
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+        # if User.objects.filter(username=username, email=email).exists():
+        #     user = User.objects.get(username=username, email=email)
+        #     self.send_confirmation_code(
+        #         user.email,
+        #         username,
+        #         default_token_generator.make_token(user)
         #     )
-        # except IntegrityError:
-        #     raise ValidationError()
-        #
+        #     serializer = UserSignUpSerializer(data=request.data)
+        #     serializer.is_valid()
+        #     return Response(
+        #         serializer.data,
+        #         status=status.HTTP_200_OK
+        #     )
+        # serializer = UserSignUpSerializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # user = User.objects.create(**serializer.validated_data)
         # self.send_confirmation_code(
         #     user.email,
         #     username,
         #     default_token_generator.make_token(user)
         # )
 
-        if User.objects.filter(username=username, email=email).exists():
-            user = User.objects.get(username=username, email=email)
-            self.send_confirmation_code(
-                user.email,
-                username,
-                default_token_generator.make_token(user)
-            )
-            serializer = UserSignUpSerializer(data=request.data)
-            serializer.is_valid()
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        serializer = UserSignUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = User.objects.create(**serializer.validated_data)
-        self.send_confirmation_code(
-            user.email,
-            username,
-            default_token_generator.make_token(user)
-        )
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
 
 
 class UserReceiveTokenViewSet(mixins.CreateModelMixin,
