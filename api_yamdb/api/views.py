@@ -201,30 +201,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly,)
-    queryset = Review.objects.all()
 
     def get_queryset(self):
         """Возвращает отзывы для конкретного произведения."""
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        title = self.get_title()
         return title.reviews.all()
 
     def perform_create(self, serializer):
         """Создаёт новый отзыв и устанавливает автора и произведение."""
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        title = self.get_title()
         serializer.save(author=self.request.user, title=title)
         title.update_rating()
 
-    def perform_update(self, serializer):
-        """Обновляет отзыв и пересчитывает рейтинг произведения."""
-        super().perform_update(serializer)
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        title.update_rating()
-
-    def perform_destroy(self, instance):
-        """Удаляет отзыв и пересчитывает рейтинг произведения."""
-        title = instance.title
-        super().perform_destroy(instance)
-        title.update_rating()
+    def get_title(self):
+        """Возвращает произведение по идентификатору."""
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -233,7 +224,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
     serializer_class = CommentSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly,)
-    queryset = Comment.objects.all()
 
     def get_queryset(self):
         """Возвращает комментарии для конкретного отзыва."""
