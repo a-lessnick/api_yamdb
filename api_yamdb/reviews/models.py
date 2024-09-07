@@ -1,4 +1,6 @@
 """Модели приложения reviews."""
+from datetime import datetime
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator, MinValueValidator, RegexValidator
@@ -116,23 +118,35 @@ class Title(models.Model):
     """Произведения."""
 
     name = models.CharField('Название', max_length=TEXT_FIELD_LENGTH)
-    year = models.IntegerField('Год выхода')
     description = models.TextField('Описание', blank=True, null=True)
-    genre = models.ManyToManyField(
-        Genre, through='TitleGenre', verbose_name='Жанр'
-    )
+    genre = models.ManyToManyField(Genre, blank=True, related_name='genres')
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,
         related_name='titles',
         verbose_name='Категория'
     )
-    rating = models.IntegerField('Рейтинг', default=None, null=True)
+    # rating = models.IntegerField('Рейтинг', default=None, null=True)
 
-    def update_rating(self):
-        rating = self.reviews.aggregate(Avg('score'))['score__avg']
-        self.rating = rating
-        self.save()
+    year = models.SmallIntegerField(
+        verbose_name='Год выпуска',
+        validators=[
+            MinValueValidator(
+                0,
+                message='Значение года не может быть отрицательным'
+            ),
+            MaxValueValidator(
+                int(datetime.now().year),
+                message='Значение года не может быть больше текущего'
+            )
+        ],
+        db_index=True
+    )
+
+    # def update_rating(self):
+    #     rating = self.reviews.aggregate(Avg('score'))['score__avg']
+    #     self.rating = rating
+    #     self.save()
 
     class Meta:
         ordering = ('name',)
@@ -141,28 +155,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class TitleGenre(models.Model):
-    """Соответствие произведений и жанров."""
-
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        verbose_name='Произведение'
-    )
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE,
-        verbose_name='Жанр'
-    )
-
-    class Meta:
-        verbose_name = 'Жанр произведения'
-        verbose_name_plural = 'Жанры произведений'
-
-    def __str__(self):
-        return f'{self.title} {self.genre}'
 
 
 class Review(models.Model):
@@ -194,7 +186,7 @@ class Review(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.title.update_rating()
+        # self.title.update_rating()
 
     class Meta:
         verbose_name = 'Отзыв'
