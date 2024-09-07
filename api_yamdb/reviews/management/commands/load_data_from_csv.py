@@ -1,4 +1,6 @@
 import csv
+import logging
+import sys
 
 from django.conf import settings
 from django.core.management import BaseCommand
@@ -24,6 +26,15 @@ FK_FIELDS = {
     'author': ('author', User),
     'review_id': ('review', Review),
 }
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def convert_foreign_key(csv_data):
@@ -54,10 +65,12 @@ def load_from_csv(table, file_name):
                 model = table(**csv_data)
                 model.save()
             except (ValueError, IntegrityError) as err:
-                print(f'Ошибка в загружаемых данных. {err}. '
-                      f'{error_message}')
+                logger.error(
+                    f'Ошибка в загружаемых данных. {err}. '
+                    f'{error_message}'
+                )
                 break
-        print(success_message)
+        logger.debug(success_message)
 
 
 class Command(BaseCommand):

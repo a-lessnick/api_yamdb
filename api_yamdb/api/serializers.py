@@ -2,9 +2,10 @@
 from rest_framework import serializers
 
 from reviews.models import User, Category, Comment, Genre, Review, Title
+from reviews.constants import USERNAME_REGEX_SIGNS, NAME_MAX_LENGTH
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserSignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя."""
 
     class Meta:
@@ -12,7 +13,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = ('username', 'email')
 
     def validate_username(self, username):
-        if username in 'me':
+        if username == 'me':
             raise serializers.ValidationError(
                 '"me" запрещено использовать!'
             )
@@ -23,30 +24,23 @@ class UserReceiveTokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена."""
 
     username = serializers.RegexField(
-        regex=User.REGEX_SIGNS,
-        max_length=User.NAME_MAX_LENGTH,
+        regex=USERNAME_REGEX_SIGNS,
+        max_length=NAME_MAX_LENGTH,
         required=True
     )
     confirmation_code = serializers.CharField(
-        max_length=User.NAME_MAX_LENGTH,
+        max_length=NAME_MAX_LENGTH,
         required=True
     )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(UserSignUpSerializer):
     """Сериализатор для пользователя."""
 
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
-
-    def validate_username(self, username):
-        if username in 'me':
-            raise serializers.ValidationError(
-                '"me" запрещено использовать!'
-            )
-        return username
 
 
 class NotAdminSerializer(serializers.ModelSerializer):
@@ -82,7 +76,9 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Genre.objects.all(),
-        many=True
+        many=True,
+        allow_null=False,
+        allow_empty=False
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
@@ -93,6 +89,11 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
+
+    def to_representation(self, title):
+        """Определение сериализатоа для чтения."""
+        serializer = TitleReadSerializer(title)
+        return serializer.data
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
@@ -122,15 +123,27 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Проверяет уникальность отзыва пользователя на одно произведение."""
         request = self.context.get('request')
+        author = request.user
+        title_id = self.context.get('view').kwargs.get('title_id')
+
         if request.method == 'POST':
-            author = request.user
-            title_id = self.context.get('view').kwargs.get('title_id')
             if Review.objects.filter(
                 author=author, title_id=title_id
             ).exists():
                 raise serializers.ValidationError(
                     'Нельзя оставить два отзыва на одно произведение.'
                 )
+        elif request.method in ['PATCH', 'PUT']:
+            if self.instance.author == author:
+                review_id = self.instance.id
+                existing_review = Review.objects.filter(
+                    author=author, title_id=title_id
+                ).exclude(id=review_id)
+                if existing_review.exists():
+                    raise serializers.ValidationError(
+                        'Нельзя оставить два отзыва на одно произведение.'
+                    )
+
         return data
 
 

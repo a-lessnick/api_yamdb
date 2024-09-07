@@ -6,17 +6,17 @@ from django.core.validators import (
 from django.db import models
 from django.db.models import Avg
 
-from api_yamdb.settings import TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH
+from .constants import (
+    TEXT_FIELD_LENGTH, SLUG_FIELD_LENGTH,
+    SCORE_MIN_VALUE, SCORE_MAX_VALUE,
+    NAME_MAX_LENGTH, EMAIL_MAX_LENGTH,
+    ROLE_MAX_LENGTH,
+)
+from .validators import validate_username
 
 
 class User(AbstractUser):
     """Модель пользователя."""
-
-    REGEX_SIGNS = r'^[\w.@+-]+\Z'
-    REGEX_ME = r'[^m][^e]'
-    NAME_MAX_LENGTH = 150
-    EMAIL_MAX_LENGTH = 254
-    ROLE_MAX_LENGTH = 64
 
     USER = 'user'
     ADMIN = 'admin'
@@ -31,7 +31,7 @@ class User(AbstractUser):
     username = models.CharField(
         unique=True,
         max_length=NAME_MAX_LENGTH,
-        validators=(RegexValidator(REGEX_SIGNS), RegexValidator(REGEX_ME)),
+        validators=(validate_username,),
         verbose_name='Никнейм пользователя',
     )
     email = models.EmailField(
@@ -166,8 +166,6 @@ class TitleGenre(models.Model):
 
 
 class Review(models.Model):
-    """Модель отзыва на произведение."""
-
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -181,11 +179,11 @@ class Review(models.Model):
         verbose_name='Автор'
     )
     text = models.TextField()
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10)
+            MinValueValidator(SCORE_MIN_VALUE),
+            MaxValueValidator(SCORE_MAX_VALUE)
         ],
     )
     pub_date = models.DateTimeField(
@@ -195,7 +193,6 @@ class Review(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        """Сохраняет отзыв и обновляет рейтинг после его публикации."""
         super().save(*args, **kwargs)
         self.title.update_rating()
 
@@ -215,8 +212,6 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """Модель комментария к отзыву."""
-
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
@@ -234,7 +229,8 @@ class Comment(models.Model):
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
-        db_index=True
+        db_index=True,
+        verbose_name='Дата публикации'
     )
 
     class Meta:
