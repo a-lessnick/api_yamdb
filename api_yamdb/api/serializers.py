@@ -3,6 +3,9 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
+from reviews.constants import (
+    EMAIL_MAX_LENGTH, NAME_MAX_LENGTH, USERNAME_REGEX_SIGNS
+)
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -17,11 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AuthSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True, max_length=254)
+    email = serializers.EmailField(required=True, max_length=EMAIL_MAX_LENGTH)
     username = serializers.CharField(
-        required=True, max_length=150,
+        required=True, max_length=NAME_MAX_LENGTH,
         validators=[RegexValidator(
-            regex=r'^[\w.@+-]+\Z',
+            regex=USERNAME_REGEX_SIGNS,
             message='Имя пользователя содержит недопустимый символ'
         )]
     )
