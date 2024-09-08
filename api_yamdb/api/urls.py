@@ -4,24 +4,23 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (ReviewViewSet, CommentViewSet,
                     GenreViewSet, CategoryViewSet, TitleViewSet,
-                    UsersViewSet, UserCreateViewSet,
-                    UserReceiveTokenViewSet
+                    SignUpView, GetTokenView, UserViewSet
                     )
 
 auth_urls = [
     path(
         'signup/',
-        UserCreateViewSet.as_view(),
+        SignUpView.as_view(),
         name='signup'
     ),
     path(
         'token/',
-        UserReceiveTokenViewSet.as_view({'post': 'create'}),
+        GetTokenView.as_view(),
         name='token'
     )
 ]
 router_v1 = DefaultRouter()
-router_v1.register('users', UsersViewSet, basename='users')
+router_v1.register('users', UserViewSet, basename='users')
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,
