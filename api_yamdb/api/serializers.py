@@ -3,9 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
-from reviews.models import User, Category, Comment, Genre, Review, Title
-from reviews.constants import USERNAME_REGEX_SIGNS, NAME_MAX_LENGTH
-
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
