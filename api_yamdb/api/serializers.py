@@ -72,7 +72,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
-    # rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
@@ -88,7 +88,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     """Сериализатор для методов чтения произведений."""
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
-    # rating = serializers.IntegerField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
