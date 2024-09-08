@@ -1,57 +1,47 @@
 """Сериализаторы."""
+from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator
 from rest_framework import serializers
 
 from reviews.models import User, Category, Comment, Genre, Review, Title
 from reviews.constants import USERNAME_REGEX_SIGNS, NAME_MAX_LENGTH
 
 
-class UserSignUpSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания пользователя."""
+User = get_user_model()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        ordering = ['id']
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role')
+
+
+class AuthSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True, max_length=254)
+    username = serializers.CharField(
+        required=True, max_length=150,
+        validators=[RegexValidator(
+            regex=r'^[\w.@+-]+\Z',
+            message='Имя пользователя содержит недопустимый символ'
+        )]
+    )
 
     class Meta:
         model = User
         fields = ('username', 'email')
 
-    def validate_username(self, username):
-        if username == 'me':
+    def validate_username(self, value):
+        if value.lower() == 'me':
             raise serializers.ValidationError(
-                '"me" запрещено использовать!'
-            )
-        return username
+                "Имя пользователя 'me' недопустимо.")
+        return value
 
 
-class UserReceiveTokenSerializer(serializers.Serializer):
-    """Сериализатор для получения токена."""
-
-    username = serializers.RegexField(
-        regex=USERNAME_REGEX_SIGNS,
-        max_length=NAME_MAX_LENGTH,
-        required=True
-    )
-    confirmation_code = serializers.CharField(
-        max_length=NAME_MAX_LENGTH,
-        required=True
-    )
-
-
-class UserSerializer(UserSignUpSerializer):
-    """Сериализатор для пользователя."""
-
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'role')
-
-
-class NotAdminSerializer(serializers.ModelSerializer):
-    """Сериализатор для пользователей не являющихся Админом."""
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role'
-        )
-        read_only_fields = ('role',)
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
 
 class GenreSerializer(serializers.ModelSerializer):
