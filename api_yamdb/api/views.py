@@ -123,7 +123,7 @@ class GenreViewSet(CreateListDestroyViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для создания объектов класса Title."""
 
-    http_method_names = ('get', 'post', 'patch', 'delete')
+    http_method_names = ['get', 'post', 'delete', 'patch']
     queryset = (
         Title.objects.all().annotate(
             rating=Avg('reviews__score')
