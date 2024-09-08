@@ -1,6 +1,7 @@
 """Модели приложения reviews."""
 from datetime import datetime
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator, MinValueValidator
@@ -77,6 +78,9 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+User = get_user_model()
 
 
 class Genre(models.Model):
