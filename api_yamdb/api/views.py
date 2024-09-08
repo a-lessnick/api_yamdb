@@ -1,7 +1,6 @@
 """Вьюсеты для API."""
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db import IntegrityError
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets, status
@@ -10,12 +9,18 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.filters import SearchFilter
+from rest_framework.views import APIView
+
+
+from rest_framework.exceptions import ValidationError
+from django.db import IntegrityError
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from api_yamdb import settings
 from reviews.models import User, Category, Title, Genre, Comment, Review
+from api_yamdb import settings
 from .filters import TitleFilter
 from .mixins import CreateListDestroyViewSet
 from .permissions import (
@@ -30,8 +35,6 @@ from .serializers import (
 
 
 class SignUpView(APIView):
-    """Регистрация пользователя."""
-
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -59,8 +62,6 @@ class SignUpView(APIView):
 
 
 class GetTokenView(TokenObtainPairView):
-    """Получение токена."""
-
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -127,7 +128,6 @@ class GenreViewSet(CreateListDestroyViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для создания объектов класса Title."""
 
-    http_method_names = ['get', 'post', 'delete', 'patch']
     queryset = (
         Title.objects.all().annotate(
             rating=Avg('reviews__score')
@@ -150,6 +150,20 @@ class TitleViewSet(viewsets.ModelViewSet):
         """Обновление произведения."""
         from rest_framework import exceptions
         raise exceptions.MethodNotAllowed(request.method)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Частичное обновление произведения."""
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
