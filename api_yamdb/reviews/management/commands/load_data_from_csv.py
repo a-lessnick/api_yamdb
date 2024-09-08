@@ -7,14 +7,14 @@ from django.core.management import BaseCommand
 from django.db import IntegrityError
 
 from reviews.models import (
-    Category, Comment, Genre, Review, Title, TitleGenre, User
+    Category, Comment, Genre, Review, Title, User
 )
 TABLES_FILES = {
     User: 'users.csv',
     Category: 'category.csv',
     Genre: 'genre.csv',
     Title: 'titles.csv',
-    TitleGenre: 'genre_title.csv',
+    # TitleGenre: 'genre_title.csv',
     Review: 'review.csv',
     Comment: 'comments.csv',
 }
