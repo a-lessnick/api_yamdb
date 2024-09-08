@@ -30,6 +30,8 @@ from .serializers import (
 
 
 class SignUpView(APIView):
+    """Регистрация пользователя."""
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -57,6 +59,8 @@ class SignUpView(APIView):
 
 
 class GetTokenView(TokenObtainPairView):
+    """Получение токена."""
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
