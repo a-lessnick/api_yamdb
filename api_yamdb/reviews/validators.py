@@ -1,4 +1,5 @@
 """Валидаторы вьсетов приложения reviews."""
+from _datetime import datetime
 import re
 
 from rest_framework.serializers import ValidationError
@@ -20,3 +21,8 @@ def validate_username(username):
             f'{bad_symbols}'
         )
     return username
+
+
+def get_current_year():
+    """Валидатор года выпуска произведения."""
+    return int(datetime.now().year)
