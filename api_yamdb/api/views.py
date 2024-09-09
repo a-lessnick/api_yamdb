@@ -159,7 +159,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """Создаёт новый отзыв и устанавливает автора и произведение."""
         title = self.get_title()
         serializer.save(author=self.request.user, title=title)
-        # title.update_rating()
 
     def get_title(self):
         """Возвращает произведение по идентификатору."""
