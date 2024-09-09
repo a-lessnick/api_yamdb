@@ -173,10 +173,6 @@ class Review(models.Model):
         db_index=True,
     )
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # self.title.update_rating()
-
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
