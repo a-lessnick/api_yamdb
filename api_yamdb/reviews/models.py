@@ -13,7 +13,7 @@ from .constants import (
     NAME_MAX_LENGTH, EMAIL_MAX_LENGTH,
     ROLE_MAX_LENGTH,
 )
-from .validators import validate_username
+from .validators import get_current_year, validate_username
 
 
 class User(AbstractUser):
@@ -129,12 +129,8 @@ class Title(models.Model):
     year = models.SmallIntegerField(
         verbose_name='Год выпуска',
         validators=[
-            MinValueValidator(
-                0,
-                message='Значение года не может быть отрицательным'
-            ),
             MaxValueValidator(
-                int(datetime.now().year),
+                get_current_year(),
                 message='Значение года не может быть больше текущего'
             )
         ],
@@ -176,10 +172,6 @@ class Review(models.Model):
         verbose_name='Дата публикации',
         db_index=True,
     )
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # self.title.update_rating()
 
     class Meta:
         verbose_name = 'Отзыв'
