@@ -123,6 +123,7 @@ class GenreViewSet(CreateListDestroyViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для создания объектов класса Title."""
 
+    http_method_names = ('get', 'post', 'patch', 'delete', 'head', 'options')
     queryset = (
         Title.objects.all().annotate(
             rating=Avg('reviews__score')
@@ -140,25 +141,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TitleReadSerializer
         return TitleWriteSerializer
-
-    def update(self, request, *args, **kwargs):
-        """Обновление произведения."""
-        from rest_framework import exceptions
-        raise exceptions.MethodNotAllowed(request.method)
-
-    def partial_update(self, request, *args, **kwargs):
-        """Частичное обновление произведения."""
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        if getattr(instance, '_prefetched_objects_cache', None):
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
