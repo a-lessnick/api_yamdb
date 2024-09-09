@@ -34,26 +34,26 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = AuthSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            try:
-                user, created = User.objects.get_or_create(
-                    username=request.data.get('username'),
-                    email=request.data.get('email')
-                )
-            except IntegrityError:
-                return Response(serializer.errors,
-                                status=status.HTTP_400_BAD_REQUEST)
-            confirmation_code = default_token_generator.make_token(user)
-            send_mail(
-                'Код подтверждения',
-                f'Ваш код - {confirmation_code}',
-                settings.EMAIL_SENDER,
-                [request.data.get('email')]
+        serializer.is_valid(raise_exception=True)
+        try:
+            user, created = User.objects.get_or_create(
+                username=request.data.get('username'),
+                email=request.data.get('email')
             )
-            return Response(
-                {'email': serializer.data['email'],
-                 'username': serializer.data['username']},
-                status=status.HTTP_200_OK)
+        except IntegrityError:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            'Код подтверждения',
+            f'Ваш код - {confirmation_code}',
+            settings.EMAIL_SENDER,
+            [request.data.get('email')]
+        )
+        return Response(
+            {'email': serializer.data['email'],
+             'username': serializer.data['username']},
+            status=status.HTTP_200_OK)
 
 
 class GetTokenView(TokenObtainPairView):
@@ -61,19 +61,19 @@ class GetTokenView(TokenObtainPairView):
 
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = get_object_or_404(
-                User, username=request.data.get('username')
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User, username=request.data.get('username')
+        )
+        if not default_token_generator.check_token(
+                user, request.data.get('confirmation_code')
+        ):
+            return Response(
+                'Неверный confirmation_code',
+                status=status.HTTP_400_BAD_REQUEST
             )
-            if not default_token_generator.check_token(
-                    user, request.data.get('confirmation_code')
-            ):
-                return Response(
-                    'Неверный confirmation_code',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            token = {'token': str(AccessToken.for_user(user))}
-            return Response(token, status=status.HTTP_200_OK)
+        token = {'token': str(AccessToken.for_user(user))}
+        return Response(token, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -83,6 +83,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=username']
     lookup_field = 'username'
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
 
     @action(detail=False, methods=['get', 'patch'],
             permission_classes=[IsAuthenticated],
@@ -94,16 +95,16 @@ class UserViewSet(viewsets.ModelViewSet):
             data=request.data,
             partial=True
         )
-        if serializer.is_valid(raise_exception=True):
-            if self.request.method == 'PATCH':
-                serializer.validated_data.pop('role', None)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer.is_valid(raise_exception=True)
+        if self.request.method == 'PATCH':
+            serializer.validated_data.pop('role', None)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
+    # def update(self, request, *args, **kwargs):
+    #     if request.method == 'PUT':
+    #         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    #     return super().update(request, *args, **kwargs)
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
