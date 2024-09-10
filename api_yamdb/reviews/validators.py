@@ -1,5 +1,5 @@
 """Валидаторы вьсетов приложения reviews."""
-from _datetime import datetime
+from datetime import datetime
 import re
 
 from rest_framework.serializers import ValidationError
@@ -23,6 +23,10 @@ def validate_username(username):
     return username
 
 
-def get_current_year():
+def validate_year(value):
     """Валидатор года выпуска произведения."""
-    return int(datetime.now().year)
+    current_year = datetime.now().year
+    if value > current_year:
+        raise ValidationError(
+            f'Год {value} не может быть больше {current_year}.'
+        )
