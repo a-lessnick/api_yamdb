@@ -125,6 +125,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         return data
 
+
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев к отзывам."""
 
