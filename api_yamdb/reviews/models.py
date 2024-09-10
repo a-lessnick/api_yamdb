@@ -11,7 +11,7 @@ from .constants import (
     NAME_MAX_LENGTH, EMAIL_MAX_LENGTH,
     ROLE_MAX_LENGTH,
 )
-from .validators import get_current_year, validate_username
+from .validators import validate_username, validate_year
 
 
 class User(AbstractUser):
@@ -126,12 +126,7 @@ class Title(models.Model):
 
     year = models.SmallIntegerField(
         verbose_name='Год выпуска',
-        validators=[
-            MaxValueValidator(
-                get_current_year(),
-                message='Значение года не может быть больше текущего'
-            )
-        ],
+        validators=[validate_year],
         db_index=True
     )
 
