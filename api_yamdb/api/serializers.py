@@ -113,32 +113,17 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Проверяет уникальность отзыва пользователя на одно произведение."""
-
         request = self.context.get('request')
-        author = request.user
-        title_id = self.context.get('view').kwargs.get('title_id')
-
-        if request.method in ['POST', 'PATCH', 'PUT']:
-            if request.method == 'POST':
-                if Review.objects.filter(
-                    author=author, title_id=title_id
-                ).exists():
-                    raise serializers.ValidationError(
-                        'Нельзя оставить два отзыва на одно произведение.'
-                    )
-            else:
-                if self.instance and self.instance.author == author:
-                    review_id = self.instance.id
-                    existing_review = Review.objects.filter(
-                        author=author, title_id=title_id
-                    ).exclude(id=review_id)
-                    if existing_review.exists():
-                        raise serializers.ValidationError(
-                            'Нельзя оставить два отзыва на одно произведение.'
-                        )
-
+        if request.method != 'POST':
+            return data
+        title_id = self.context['view'].kwargs.get('title_id')
+        if Review.objects.filter(
+                title__id=title_id, author=request.user
+        ).exists():
+            raise serializers.ValidationError(
+                'Вы уже оставляли отзыв о данном произведении.'
+            )
         return data
-
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев к отзывам."""
